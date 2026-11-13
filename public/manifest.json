@@ -1,0 +1,18 @@
+{
+  "name": "SIM-ALKES UPTD RSUD LAMADDUKELLENG",
+  "short_name": "SIM-ALKES",
+  "description": "Sistem Informasi Manajemen Elektromedis, Inventaris Alkes & Laporan Perbaikan UPTD RSUD LAMADDUKELLENG",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#dc2626",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo-app.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

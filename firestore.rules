@@ -1,0 +1,510 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Safety Net (Default Deny Catch-All)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Global Security Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isBootstrapAdmin() {
+      return isVerifiedUser() && request.auth.token.email == 'bulukumba17101994@gmail.com';
+    }
+
+    function isAdmin() {
+      return isBootstrapAdmin() || (isVerifiedUser() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    // 3. Entity Validation Blueprints
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'displayName', 'role', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'email', 'displayName', 'role', 'teknisiUsername', 'ruangan', 'createdAt', 'updatedAt'])
+        && isValidId(data.uid)
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 200
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 150
+        && data.role in ['admin', 'user']
+        && (!('teknisiUsername' in data) || (data.teknisiUsername is string && data.teknisiUsername.size() <= 64))
+        && (!('ruangan' in data) || (data.ruangan is string && data.ruangan.size() <= 100))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidAdmin(data) {
+      return data.keys().hasAll(['uid', 'email', 'namaLengkap', 'createdAt'])
+        && data.keys().hasOnly(['uid', 'email', 'namaLengkap', 'createdAt'])
+        && isValidId(data.uid)
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 200
+        && data.namaLengkap is string && data.namaLengkap.size() >= 1 && data.namaLengkap.size() <= 150
+        && data.createdAt is timestamp;
+    }
+
+    function isValidAlkes(data) {
+      return data.keys().hasAll([
+          'id', 'ruangan', 'namaAlat', 'merk', 'modelType', 'serialNumber',
+          'tahunPengadaan', 'statusKalibrasi', 'kondisi', 'keterangan',
+          'ownerId', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'ruangan', 'namaAlat', 'merk', 'modelType', 'serialNumber',
+          'tahunPengadaan', 'kalibrasiTerakhir', 'kalibrasiBerikutnya',
+          'statusKalibrasi', 'kondisi', 'keterangan', 'nomorInventaris',
+          'lokasiSpesifik', 'lastEditedBy', 'ownerId', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.ruangan is string && data.ruangan.size() >= 1 && data.ruangan.size() <= 100
+        && data.namaAlat is string && data.namaAlat.size() >= 1 && data.namaAlat.size() <= 200
+        && data.merk is string && data.merk.size() <= 150
+        && data.modelType is string && data.modelType.size() <= 150
+        && data.serialNumber is string && data.serialNumber.size() <= 150
+        && data.tahunPengadaan is string && data.tahunPengadaan.size() <= 32
+        && (!('kalibrasiTerakhir' in data) || (data.kalibrasiTerakhir is string && data.kalibrasiTerakhir.size() <= 32))
+        && (!('kalibrasiBerikutnya' in data) || (data.kalibrasiBerikutnya is string && data.kalibrasiBerikutnya.size() <= 32))
+        && data.statusKalibrasi in ['Terkalibrasi', 'Perlu Kalibrasi', 'Kadaluarsa']
+        && data.kondisi in ['Baik', 'Rusak Ringan', 'Rusak Sedang', 'Rusak Berat']
+        && data.keterangan is string && data.keterangan.size() <= 200
+        && (!('nomorInventaris' in data) || (data.nomorInventaris is string && data.nomorInventaris.size() <= 120))
+        && (!('lokasiSpesifik' in data) || (data.lokasiSpesifik is string && data.lokasiSpesifik.size() <= 150))
+        && (!('lastEditedBy' in data) || (data.lastEditedBy is string && data.lastEditedBy.size() <= 150))
+        && isValidId(data.ownerId)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPemeliharaan(data) {
+      return data.keys().hasAll([
+          'id', 'tanggal', 'namaTeknisi', 'ruangan', 'namaAlat',
+          'kegiatanFisik', 'kegiatanSetting', 'kegiatanCleaning',
+          'kondisi', 'status', 'ownerId', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'tanggal', 'namaTeknisi', 'nipTeknisi', 'ruangan', 'alkesId',
+          'namaAlat', 'merk', 'modelType', 'serialNumber',
+          'kegiatanFisik', 'kegiatanSetting', 'kegiatanCleaning',
+          'kondisi', 'status', 'catatan', 'rekomendasi',
+          'ownerId', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.tanggal is string && data.tanggal.size() >= 1 && data.tanggal.size() <= 32
+        && data.namaTeknisi is string && data.namaTeknisi.size() >= 1 && data.namaTeknisi.size() <= 150
+        && (!('nipTeknisi' in data) || (data.nipTeknisi is string && data.nipTeknisi.size() <= 64))
+        && data.ruangan is string && data.ruangan.size() >= 1 && data.ruangan.size() <= 100
+        && (!('alkesId' in data) || (data.alkesId is string && data.alkesId.size() <= 128))
+        && data.namaAlat is string && data.namaAlat.size() >= 1 && data.namaAlat.size() <= 200
+        && (!('merk' in data) || (data.merk is string && data.merk.size() <= 150))
+        && (!('modelType' in data) || (data.modelType is string && data.modelType.size() <= 150))
+        && (!('serialNumber' in data) || (data.serialNumber is string && data.serialNumber.size() <= 150))
+        && data.kegiatanFisik is bool
+        && data.kegiatanSetting is bool
+        && data.kegiatanCleaning is bool
+        && data.kondisi in ['Baik', 'Rusak Ringan', 'Rusak Sedang', 'Rusak Berat']
+        && data.status in ['layak pakai', 'perlu perbaikan / penggantian sparepart']
+        && (!('catatan' in data) || (data.catatan is string && data.catatan.size() <= 1000))
+        && (!('rekomendasi' in data) || (data.rekomendasi is string && data.rekomendasi.size() <= 1000))
+        && isValidId(data.ownerId)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPerbaikan(data) {
+      return data.keys().hasAll([
+          'id', 'nomorSpk', 'tanggal', 'pelapor', 'ruangan', 'namaAlat',
+          'keluhanKerusakan', 'statusPerbaikan', 'ownerId', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'nomorSpk', 'tanggal', 'pelapor', 'ruangan', 'alkesId',
+          'namaAlat', 'merk', 'modelType', 'serialNumber',
+          'keluhanKerusakan', 'analisisTeknisi', 'tindakanPerbaikan',
+          'sparepartDiganti', 'biayaEstimasi', 'teknisiPelaksana',
+          'statusPerbaikan', 'ownerId', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.nomorSpk is string && data.nomorSpk.size() >= 1 && data.nomorSpk.size() <= 100
+        && data.tanggal is string && data.tanggal.size() >= 1 && data.tanggal.size() <= 32
+        && data.pelapor is string && data.pelapor.size() >= 1 && data.pelapor.size() <= 150
+        && data.ruangan is string && data.ruangan.size() >= 1 && data.ruangan.size() <= 100
+        && (!('alkesId' in data) || (data.alkesId is string && data.alkesId.size() <= 128))
+        && data.namaAlat is string && data.namaAlat.size() >= 1 && data.namaAlat.size() <= 200
+        && (!('merk' in data) || (data.merk is string && data.merk.size() <= 150))
+        && (!('modelType' in data) || (data.modelType is string && data.modelType.size() <= 150))
+        && (!('serialNumber' in data) || (data.serialNumber is string && data.serialNumber.size() <= 150))
+        && data.keluhanKerusakan is string && data.keluhanKerusakan.size() >= 1 && data.keluhanKerusakan.size() <= 2000
+        && (!('analisisTeknisi' in data) || (data.analisisTeknisi is string && data.analisisTeknisi.size() <= 2000))
+        && (!('tindakanPerbaikan' in data) || (data.tindakanPerbaikan is string && data.tindakanPerbaikan.size() <= 2000))
+        && (!('sparepartDiganti' in data) || (data.sparepartDiganti is string && data.sparepartDiganti.size() <= 500))
+        && (!('biayaEstimasi' in data) || (data.biayaEstimasi is number && data.biayaEstimasi >= 0))
+        && (!('teknisiPelaksana' in data) || (data.teknisiPelaksana is string && data.teknisiPelaksana.size() <= 150))
+        && data.statusPerbaikan in [
+          'Selesai (Alat Normal)',
+          'Menunggu Sparepart',
+          'Dalam Proses',
+          'Rekomendasi Penarikan',
+          'Rekomendasi Perbaikan Vendor'
+        ]
+        && isValidId(data.ownerId)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPerbaikanComment(data) {
+      return data.keys().hasAll(['id', 'perbaikanId', 'senderName', 'senderRole', 'message', 'ownerId', 'createdAt'])
+        && data.keys().hasOnly([
+          'id', 'perbaikanId', 'senderName', 'senderRole', 'senderUsername',
+          'senderNip', 'senderRuangan', 'message', 'statusTag', 'ownerId', 'createdAt'
+        ])
+        && isValidId(data.id)
+        && isValidId(data.perbaikanId)
+        && data.senderName is string && data.senderName.size() >= 1 && data.senderName.size() <= 150
+        && data.senderRole is string && data.senderRole.size() >= 1 && data.senderRole.size() <= 40
+        && (!('senderUsername' in data) || (data.senderUsername is string && data.senderUsername.size() <= 64))
+        && (!('senderNip' in data) || (data.senderNip is string && data.senderNip.size() <= 64))
+        && (!('senderRuangan' in data) || (data.senderRuangan is string && data.senderRuangan.size() <= 100))
+        && data.message is string && data.message.size() >= 1 && data.message.size() <= 2000
+        && (!('statusTag' in data) || (data.statusTag is string && data.statusTag.size() <= 100))
+        && isValidId(data.ownerId)
+        && data.createdAt is timestamp;
+    }
+
+    function isValidBeritaAcara(data) {
+      return data.keys().hasAll([
+          'id', 'tanggal', 'namaAlat', 'ruangan', 'kondisiTerakhir',
+          'alasanPenarikan', 'analisaTeknis', 'rekomendasiTindakan',
+          'namaTeknisi', 'namaKepalaRuangan', 'ownerId', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'nomorBap', 'tanggal', 'alkesId', 'namaAlat', 'merk',
+          'modelType', 'serialNumber', 'tahunPengadaan', 'ruangan',
+          'kondisiTerakhir', 'alasanPenarikan', 'analisaTeknis',
+          'rekomendasiTindakan', 'namaTeknisi', 'nipTeknisi',
+          'namaKepalaRuangan', 'nipKepalaRuangan', 'namaKepalaIpsrs',
+          'nipKepalaIpsrs', 'namaDirektur', 'nipDirektur', 'ttdTeknisi',
+          'ttdKepalaRuangan', 'ttdKepalaIpsrs', 'ownerId', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id)
+        && (!('nomorBap' in data) || (data.nomorBap is string && data.nomorBap.size() <= 100))
+        && data.tanggal is string && data.tanggal.size() >= 1 && data.tanggal.size() <= 32
+        && (!('alkesId' in data) || (data.alkesId is string && data.alkesId.size() <= 128))
+        && data.namaAlat is string && data.namaAlat.size() >= 1 && data.namaAlat.size() <= 200
+        && (!('merk' in data) || (data.merk is string && data.merk.size() <= 150))
+        && (!('modelType' in data) || (data.modelType is string && data.modelType.size() <= 150))
+        && (!('serialNumber' in data) || (data.serialNumber is string && data.serialNumber.size() <= 150))
+        && (!('tahunPengadaan' in data) || (data.tahunPengadaan is string && data.tahunPengadaan.size() <= 32))
+        && data.ruangan is string && data.ruangan.size() >= 1 && data.ruangan.size() <= 100
+        && data.kondisiTerakhir in ['Baik', 'Rusak Ringan', 'Rusak Sedang', 'Rusak Berat']
+        && data.alasanPenarikan is string && data.alasanPenarikan.size() >= 1 && data.alasanPenarikan.size() <= 2000
+        && data.analisaTeknis is string && data.analisaTeknis.size() >= 1 && data.analisaTeknis.size() <= 2000
+        && data.rekomendasiTindakan is string && data.rekomendasiTindakan.size() >= 1 && data.rekomendasiTindakan.size() <= 300
+        && data.namaTeknisi is string && data.namaTeknisi.size() >= 1 && data.namaTeknisi.size() <= 150
+        && (!('nipTeknisi' in data) || (data.nipTeknisi is string && data.nipTeknisi.size() <= 64))
+        && data.namaKepalaRuangan is string && data.namaKepalaRuangan.size() >= 1 && data.namaKepalaRuangan.size() <= 150
+        && (!('nipKepalaRuangan' in data) || (data.nipKepalaRuangan is string && data.nipKepalaRuangan.size() <= 64))
+        && (!('namaKepalaIpsrs' in data) || (data.namaKepalaIpsrs is string && data.namaKepalaIpsrs.size() <= 150))
+        && (!('nipKepalaIpsrs' in data) || (data.nipKepalaIpsrs is string && data.nipKepalaIpsrs.size() <= 64))
+        && (!('namaDirektur' in data) || (data.namaDirektur is string && data.namaDirektur.size() <= 150))
+        && (!('nipDirektur' in data) || (data.nipDirektur is string && data.nipDirektur.size() <= 64))
+        && (!('ttdTeknisi' in data) || (data.ttdTeknisi is string && data.ttdTeknisi.size() <= 250000))
+        && (!('ttdKepalaRuangan' in data) || (data.ttdKepalaRuangan is string && data.ttdKepalaRuangan.size() <= 250000))
+        && (!('ttdKepalaIpsrs' in data) || (data.ttdKepalaIpsrs is string && data.ttdKepalaIpsrs.size() <= 250000))
+        && isValidId(data.ownerId)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidRuangan(data) {
+      return data.keys().hasAll(['id', 'nama', 'ownerId', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'nama', 'ownerId', 'createdAt', 'updatedAt'])
+        && isValidId(data.id)
+        && data.nama is string && data.nama.size() >= 1 && data.nama.size() <= 100
+        && isValidId(data.ownerId)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidSystemConfig(data) {
+      return data.keys().hasAll(['id', 'designatedEmail', 'autoSyncEnabled', 'ownerId', 'updatedAt'])
+        && data.keys().hasOnly([
+          'id', 'googleSheetsWebhookUrl', 'designatedEmail',
+          'autoSyncEnabled', 'lastSheetSyncTime', 'ownerId', 'updatedAt'
+        ])
+        && isValidId(data.id)
+        && (!('googleSheetsWebhookUrl' in data) || (data.googleSheetsWebhookUrl is string && data.googleSheetsWebhookUrl.size() <= 500))
+        && data.designatedEmail is string && data.designatedEmail.size() >= 3 && data.designatedEmail.size() <= 200
+        && data.autoSyncEnabled is bool
+        && (!('lastSheetSyncTime' in data) || (data.lastSheetSyncTime is string && data.lastSheetSyncTime.size() <= 64))
+        && isValidId(data.ownerId)
+        && data.updatedAt is timestamp;
+    }
+
+    // 4. Collection Rules
+
+    // Users (PII Isolated - strictly owner or admin)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isBootstrapAdmin();
+      allow create: if isValidId(userId)
+        && isVerifiedUser()
+        && isValidUser(incoming())
+        && incoming().uid == request.auth.uid
+        && userId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && (isAdmin() || incoming().role == 'user');
+      allow update: if isValidId(userId)
+        && isVerifiedUser()
+        && isValidUser(incoming())
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() ||
+          (
+            isOwner(userId)
+            && incoming().role == existing().role
+            && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'teknisiUsername', 'ruangan', 'updatedAt'])
+          )
+        );
+      allow delete: if isValidId(userId) && isAdmin();
+    }
+
+    // Admins registry
+    match /admins/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isBootstrapAdmin();
+      allow create: if isValidId(userId)
+        && isAdmin()
+        && isValidAdmin(incoming())
+        && incoming().uid == userId
+        && incoming().createdAt == request.time;
+      allow update: if isValidId(userId)
+        && isAdmin()
+        && isValidAdmin(incoming())
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt;
+      allow delete: if isValidId(userId) && isBootstrapAdmin();
+    }
+
+    // Inventaris Alat Kesehatan
+    match /alkes/{alkesId} {
+      allow get: if isValidId(alkesId) && (isAdmin() || (isVerifiedUser() && existing().ownerId == request.auth.uid));
+      allow list: if isVerifiedUser() && (isBootstrapAdmin() || resource.data.ownerId == request.auth.uid);
+      allow create: if isValidId(alkesId)
+        && isAdmin()
+        && isValidAlkes(incoming())
+        && incoming().id == alkesId
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(alkesId)
+        && isAdmin()
+        && isValidAlkes(incoming())
+        && incoming().id == existing().id
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'ruangan', 'namaAlat', 'merk', 'modelType', 'serialNumber',
+          'tahunPengadaan', 'kalibrasiTerakhir', 'kalibrasiBerikutnya',
+          'statusKalibrasi', 'kondisi', 'keterangan', 'nomorInventaris',
+          'lokasiSpesifik', 'lastEditedBy', 'updatedAt'
+        ]);
+      allow delete: if isValidId(alkesId) && isAdmin();
+    }
+
+    // Pemeliharaan Preventif (PPM)
+    match /pemeliharaan/{pemeliharaanId} {
+      allow get: if isValidId(pemeliharaanId) && (isAdmin() || (isVerifiedUser() && existing().ownerId == request.auth.uid));
+      allow list: if isVerifiedUser() && (isBootstrapAdmin() || resource.data.ownerId == request.auth.uid);
+      allow create: if isValidId(pemeliharaanId)
+        && isAdmin()
+        && isValidPemeliharaan(incoming())
+        && incoming().id == pemeliharaanId
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(pemeliharaanId)
+        && isAdmin()
+        && isValidPemeliharaan(incoming())
+        && incoming().id == existing().id
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'tanggal', 'namaTeknisi', 'nipTeknisi', 'ruangan', 'alkesId',
+          'namaAlat', 'merk', 'modelType', 'serialNumber',
+          'kegiatanFisik', 'kegiatanSetting', 'kegiatanCleaning',
+          'kondisi', 'status', 'catatan', 'rekomendasi', 'updatedAt'
+        ]);
+      allow delete: if isValidId(pemeliharaanId) && isAdmin();
+    }
+
+    // Perbaikan & Laporan Kerusakan (SPK)
+    match /perbaikan/{perbaikanId} {
+      allow get: if isValidId(perbaikanId) && (isAdmin() || (isVerifiedUser() && existing().ownerId == request.auth.uid));
+      allow list: if isVerifiedUser() && (isBootstrapAdmin() || resource.data.ownerId == request.auth.uid);
+      allow create: if isValidId(perbaikanId)
+        && isVerifiedUser()
+        && isValidPerbaikan(incoming())
+        && incoming().id == perbaikanId
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && (isAdmin() || incoming().statusPerbaikan == 'Dalam Proses');
+      allow update: if isValidId(perbaikanId)
+        && isVerifiedUser()
+        && isValidPerbaikan(incoming())
+        && incoming().id == existing().id
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() ||
+          (
+            existing().ownerId == request.auth.uid
+            && existing().statusPerbaikan != 'Selesai (Alat Normal)'
+            && incoming().statusPerbaikan == existing().statusPerbaikan
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'pelapor', 'ruangan', 'alkesId', 'namaAlat', 'merk',
+              'modelType', 'serialNumber', 'keluhanKerusakan', 'updatedAt'
+            ])
+          )
+        );
+      allow delete: if isValidId(perbaikanId) && isAdmin();
+
+      // Comments subcollection (Master Gate checks parent perbaikan exists & ownership)
+      match /comments/{commentId} {
+        allow get: if isValidId(perbaikanId)
+          && isValidId(commentId)
+          && (
+            isAdmin() ||
+            (
+              isVerifiedUser()
+              && get(/databases/$(database)/documents/perbaikan/$(perbaikanId)).data.ownerId == request.auth.uid
+            )
+          );
+        allow list: if isValidId(perbaikanId)
+          && isVerifiedUser()
+          && (isBootstrapAdmin() || resource.data.ownerId == request.auth.uid);
+        allow create: if isValidId(perbaikanId)
+          && isValidId(commentId)
+          && isVerifiedUser()
+          && isValidPerbaikanComment(incoming())
+          && incoming().id == commentId
+          && incoming().perbaikanId == perbaikanId
+          && incoming().ownerId == request.auth.uid
+          && incoming().createdAt == request.time
+          && exists(/databases/$(database)/documents/perbaikan/$(perbaikanId))
+          && (
+            isAdmin() ||
+            get(/databases/$(database)/documents/perbaikan/$(perbaikanId)).data.ownerId == request.auth.uid
+          );
+        allow update: if false;
+        allow delete: if isValidId(perbaikanId) && isValidId(commentId) && isAdmin();
+      }
+    }
+
+    // Berita Acara Penarikan (BAP)
+    match /beritaAcara/{bapId} {
+      allow get: if isValidId(bapId) && (isAdmin() || (isVerifiedUser() && existing().ownerId == request.auth.uid));
+      allow list: if isVerifiedUser() && (isBootstrapAdmin() || resource.data.ownerId == request.auth.uid);
+      allow create: if isValidId(bapId)
+        && isAdmin()
+        && isValidBeritaAcara(incoming())
+        && incoming().id == bapId
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(bapId)
+        && isAdmin()
+        && isValidBeritaAcara(incoming())
+        && incoming().id == existing().id
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'nomorBap', 'tanggal', 'alkesId', 'namaAlat', 'merk',
+          'modelType', 'serialNumber', 'tahunPengadaan', 'ruangan',
+          'kondisiTerakhir', 'alasanPenarikan', 'analisaTeknis',
+          'rekomendasiTindakan', 'namaTeknisi', 'nipTeknisi',
+          'namaKepalaRuangan', 'nipKepalaRuangan', 'namaKepalaIpsrs',
+          'nipKepalaIpsrs', 'namaDirektur', 'nipDirektur', 'ttdTeknisi',
+          'ttdKepalaRuangan', 'ttdKepalaIpsrs', 'updatedAt'
+        ]);
+      allow delete: if isValidId(bapId) && isAdmin();
+    }
+
+    // Master Ruangan
+    match /ruangan/{ruanganId} {
+      allow get: if isValidId(ruanganId) && (isAdmin() || (isVerifiedUser() && existing().ownerId == request.auth.uid));
+      allow list: if isVerifiedUser() && (isBootstrapAdmin() || resource.data.ownerId == request.auth.uid);
+      allow create: if isValidId(ruanganId)
+        && isAdmin()
+        && isValidRuangan(incoming())
+        && incoming().id == ruanganId
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(ruanganId)
+        && isAdmin()
+        && isValidRuangan(incoming())
+        && incoming().id == existing().id
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['nama', 'updatedAt']);
+      allow delete: if isValidId(ruanganId) && isAdmin();
+    }
+
+    // System Configuration
+    match /systemConfig/{configId} {
+      allow get: if isValidId(configId) && isAdmin();
+      allow list: if isBootstrapAdmin();
+      allow create: if isValidId(configId)
+        && isAdmin()
+        && isValidSystemConfig(incoming())
+        && incoming().id == configId
+        && incoming().ownerId == request.auth.uid
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(configId)
+        && isAdmin()
+        && isValidSystemConfig(incoming())
+        && incoming().id == existing().id
+        && incoming().ownerId == existing().ownerId
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'googleSheetsWebhookUrl', 'designatedEmail',
+          'autoSyncEnabled', 'lastSheetSyncTime', 'updatedAt'
+        ]);
+      allow delete: if isValidId(configId) && isBootstrapAdmin();
+    }
+
+    // Connection test probe (read-only check used on boot)
+    match /test/{testId} {
+      allow get: if isValidId(testId) && isVerifiedUser();
+      allow list, write: if false;
+    }
+  }
+}

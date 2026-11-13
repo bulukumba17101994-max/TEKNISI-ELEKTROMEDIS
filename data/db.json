@@ -1,0 +1,58 @@
+{
+  "inventaris": [],
+  "pemeliharaan": [],
+  "perbaikan": [
+    {
+      "id": "SPK-518866",
+      "nomorSpk": "SPK-ELMED/RSUD-SW/2026/804",
+      "tanggal": "2026-02-19",
+      "pelapor": "Hartati., S.Si, Apt",
+      "ruangan": "CSSD",
+      "namaAlat": "Autoclave Singgle Door",
+      "merk": "Gettinge",
+      "modelType": "HS33",
+      "serialNumber": "BAA112828",
+      "keluhanKerusakan": "Pintu tidak bisa terbuka",
+      "analisisTeknisi": "proses sterilisasi tidak selesai sehingga tekanan dalam chamber tidak terbuang dan pintu otomatis tidak bisa terbuka untuk menghindari kecelakaan kerja (terkena air panas)",
+      "tindakanPerbaikan": "membuang manual tekanan dalam chamber  sesuai safety alat sehingga aman untuk petugas dan alat sudah bisa digunakan kembali",
+      "sparepartDiganti": "tidak ada",
+      "biayaEstimasi": 0,
+      "teknisiPelaksana": "Musmuliadi, SKM.M.M",
+      "statusPerbaikan": "Selesai (Alat Normal)"
+    }
+  ],
+  "beritaAcara": [],
+  "deletedIds": {
+    "ALKES-2024-001": 1791032484249,
+    "ALKES-2024-002": 1791032484249,
+    "ALKES-2024-003": 1791032484249,
+    "ALKES-2024-004": 1791032484249,
+    "ALKES-2024-005": 1791032484249,
+    "ALKES-2024-006": 1791032484249,
+    "ALKES-2024-007": 1791032484249,
+    "ALKES-2024-008": 1791032484249,
+    "ALKES-2024-009": 1791032484249,
+    "ALKES-2024-010": 1791032484249,
+    "PPM-2024-001": 1791032484249,
+    "PPM-2024-002": 1791032484249,
+    "PPM-2024-003": 1791032484249,
+    "PPM-2024-004": 1791032484249,
+    "PPM-2024-005": 1791032484249,
+    "SPK-2024-001": 1791032484249,
+    "SPK-2024-002": 1791032484249,
+    "SPK-2024-003": 1791032484249,
+    "SPK-2024-004": 1791032484249,
+    "BAP-2024-001": 1791032484249,
+    "BAP-2024-002": 1791032484249,
+    "BAP-634564": 1794560486941
+  },
+  "inventarisClearedAt": 1794562200000,
+  "lastUpdated": 1794562200000,
+  "config": {
+    "googleSheetsWebhookUrl": "",
+    "designatedEmail": "bulukumba17101994@gmail.com",
+    "autoSyncEnabled": true,
+    "lastSheetSyncTime": "",
+    "sheetSyncLogs": []
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "Remix SIM-ALKES UPTD RSUD LAMADDUKELLENG",
+  "description": "Sistem Informasi Manajemen Elektromedis, Inventaris Alkes, Pemeliharaan \u0026 Pemantauan (PPM), serta Formulir Perbaikan UPTD RSUD LAMADDUKELLENG dengan Sinkronisasi Multi-Device dan Berita Acara Penarikan.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

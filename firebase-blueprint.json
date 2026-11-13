@@ -1,0 +1,862 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Authenticated hospital user profile linked to Firebase Auth UID.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Verified user email address",
+          "maxLength": 200
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User full display name",
+          "minLength": 1,
+          "maxLength": 150
+        },
+        "role": {
+          "type": "string",
+          "description": "Application access role",
+          "enum": ["admin", "user"]
+        },
+        "teknisiUsername": {
+          "type": "string",
+          "description": "Mapped technician username if applicable",
+          "maxLength": 64
+        },
+        "ruangan": {
+          "type": "string",
+          "description": "Assigned hospital room or unit",
+          "maxLength": 100
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last update timestamp"
+        }
+      },
+      "required": ["uid", "email", "displayName", "role", "createdAt", "updatedAt"]
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "Authorized biomedical technician administrator record.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID of the administrator",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Administrator verified email",
+          "maxLength": 200
+        },
+        "namaLengkap": {
+          "type": "string",
+          "description": "Administrator full name",
+          "minLength": 1,
+          "maxLength": 150
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        }
+      },
+      "required": ["uid", "email", "namaLengkap", "createdAt"]
+    },
+    "Alkes": {
+      "title": "Alkes",
+      "description": "Medical equipment inventory item at RSUD Lamaddukelleng.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique equipment identifier",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ruangan": {
+          "type": "string",
+          "description": "Hospital room where equipment is located",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "namaAlat": {
+          "type": "string",
+          "description": "Medical equipment name",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "merk": {
+          "type": "string",
+          "description": "Equipment brand or manufacturer",
+          "maxLength": 150
+        },
+        "modelType": {
+          "type": "string",
+          "description": "Equipment model or type",
+          "maxLength": 150
+        },
+        "serialNumber": {
+          "type": "string",
+          "description": "Equipment serial number",
+          "maxLength": 150
+        },
+        "tahunPengadaan": {
+          "type": "string",
+          "description": "Procurement year",
+          "maxLength": 32
+        },
+        "kalibrasiTerakhir": {
+          "type": "string",
+          "description": "Last calibration date YYYY-MM-DD",
+          "maxLength": 32
+        },
+        "kalibrasiBerikutnya": {
+          "type": "string",
+          "description": "Next calibration date YYYY-MM-DD",
+          "maxLength": 32
+        },
+        "statusKalibrasi": {
+          "type": "string",
+          "description": "Calibration status",
+          "enum": ["Terkalibrasi", "Perlu Kalibrasi", "Kadaluarsa"]
+        },
+        "kondisi": {
+          "type": "string",
+          "description": "Physical condition of equipment",
+          "enum": ["Baik", "Rusak Ringan", "Rusak Sedang", "Rusak Berat"]
+        },
+        "keterangan": {
+          "type": "string",
+          "description": "Operational remarks",
+          "maxLength": 200
+        },
+        "nomorInventaris": {
+          "type": "string",
+          "description": "Hospital asset inventory number",
+          "maxLength": 120
+        },
+        "lokasiSpesifik": {
+          "type": "string",
+          "description": "Specific location inside room",
+          "maxLength": 150
+        },
+        "lastEditedBy": {
+          "type": "string",
+          "description": "Name of technician who last edited the record",
+          "maxLength": 150
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Creator Firebase Auth UID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last update timestamp"
+        }
+      },
+      "required": [
+        "id",
+        "ruangan",
+        "namaAlat",
+        "merk",
+        "modelType",
+        "serialNumber",
+        "tahunPengadaan",
+        "statusKalibrasi",
+        "kondisi",
+        "keterangan",
+        "ownerId",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Pemeliharaan": {
+      "title": "Pemeliharaan",
+      "description": "Preventive maintenance (PPM) inspection log for medical equipment.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique maintenance record ID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "tanggal": {
+          "type": "string",
+          "description": "Maintenance date YYYY-MM-DD",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "namaTeknisi": {
+          "type": "string",
+          "description": "Technician name",
+          "minLength": 1,
+          "maxLength": 150
+        },
+        "nipTeknisi": {
+          "type": "string",
+          "description": "Technician employee ID",
+          "maxLength": 64
+        },
+        "ruangan": {
+          "type": "string",
+          "description": "Hospital room",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "alkesId": {
+          "type": "string",
+          "description": "Optional linked Alkes document ID",
+          "maxLength": 128
+        },
+        "namaAlat": {
+          "type": "string",
+          "description": "Equipment name",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "merk": {
+          "type": "string",
+          "description": "Equipment brand",
+          "maxLength": 150
+        },
+        "modelType": {
+          "type": "string",
+          "description": "Equipment model",
+          "maxLength": 150
+        },
+        "serialNumber": {
+          "type": "string",
+          "description": "Serial number",
+          "maxLength": 150
+        },
+        "kegiatanFisik": {
+          "type": "boolean",
+          "description": "Physical and accessories inspection completed"
+        },
+        "kegiatanSetting": {
+          "type": "boolean",
+          "description": "Parameter setting and electrical/mechanical maintenance completed"
+        },
+        "kegiatanCleaning": {
+          "type": "boolean",
+          "description": "Equipment cleaning completed"
+        },
+        "kondisi": {
+          "type": "string",
+          "description": "Equipment condition after maintenance",
+          "enum": ["Baik", "Rusak Ringan", "Rusak Sedang", "Rusak Berat"]
+        },
+        "status": {
+          "type": "string",
+          "description": "Feasibility status",
+          "enum": ["layak pakai", "perlu perbaikan / penggantian sparepart"]
+        },
+        "catatan": {
+          "type": "string",
+          "description": "Technician notes",
+          "maxLength": 1000
+        },
+        "rekomendasi": {
+          "type": "string",
+          "description": "Technician recommendations",
+          "maxLength": 1000
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Creator Firebase Auth UID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp"
+        }
+      },
+      "required": [
+        "id",
+        "tanggal",
+        "namaTeknisi",
+        "ruangan",
+        "namaAlat",
+        "kegiatanFisik",
+        "kegiatanSetting",
+        "kegiatanCleaning",
+        "kondisi",
+        "status",
+        "ownerId",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Perbaikan": {
+      "title": "Perbaikan",
+      "description": "Equipment repair work order (SPK) and malfunction report.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique repair record ID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "nomorSpk": {
+          "type": "string",
+          "description": "Work order number",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "tanggal": {
+          "type": "string",
+          "description": "Report date YYYY-MM-DD",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "pelapor": {
+          "type": "string",
+          "description": "Reporter name",
+          "minLength": 1,
+          "maxLength": 150
+        },
+        "ruangan": {
+          "type": "string",
+          "description": "Hospital room",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "alkesId": {
+          "type": "string",
+          "description": "Optional linked Alkes document ID",
+          "maxLength": 128
+        },
+        "namaAlat": {
+          "type": "string",
+          "description": "Equipment name",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "merk": {
+          "type": "string",
+          "description": "Equipment brand",
+          "maxLength": 150
+        },
+        "modelType": {
+          "type": "string",
+          "description": "Equipment model",
+          "maxLength": 150
+        },
+        "serialNumber": {
+          "type": "string",
+          "description": "Serial number",
+          "maxLength": 150
+        },
+        "keluhanKerusakan": {
+          "type": "string",
+          "description": "Damage complaint description",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "analisisTeknisi": {
+          "type": "string",
+          "description": "Technician root-cause analysis",
+          "maxLength": 2000
+        },
+        "tindakanPerbaikan": {
+          "type": "string",
+          "description": "Repair action taken",
+          "maxLength": 2000
+        },
+        "sparepartDiganti": {
+          "type": "string",
+          "description": "Replaced spare parts",
+          "maxLength": 500
+        },
+        "biayaEstimasi": {
+          "type": "number",
+          "description": "Estimated repair cost in IDR"
+        },
+        "teknisiPelaksana": {
+          "type": "string",
+          "description": "Assigned biomedical technician",
+          "maxLength": 150
+        },
+        "statusPerbaikan": {
+          "type": "string",
+          "description": "Repair workflow status",
+          "enum": [
+            "Selesai (Alat Normal)",
+            "Menunggu Sparepart",
+            "Dalam Proses",
+            "Rekomendasi Penarikan",
+            "Rekomendasi Perbaikan Vendor"
+          ]
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Creator Firebase Auth UID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp"
+        }
+      },
+      "required": [
+        "id",
+        "nomorSpk",
+        "tanggal",
+        "pelapor",
+        "ruangan",
+        "namaAlat",
+        "keluhanKerusakan",
+        "statusPerbaikan",
+        "ownerId",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PerbaikanComment": {
+      "title": "PerbaikanComment",
+      "description": "Discussion comment on a repair work order.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Comment ID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "perbaikanId": {
+          "type": "string",
+          "description": "Parent Perbaikan document ID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "senderName": {
+          "type": "string",
+          "description": "Comment author display name",
+          "minLength": 1,
+          "maxLength": 150
+        },
+        "senderRole": {
+          "type": "string",
+          "description": "Author role tag",
+          "maxLength": 40
+        },
+        "senderUsername": {
+          "type": "string",
+          "description": "Author username",
+          "maxLength": 64
+        },
+        "senderNip": {
+          "type": "string",
+          "description": "Author employee ID",
+          "maxLength": 64
+        },
+        "senderRuangan": {
+          "type": "string",
+          "description": "Author room",
+          "maxLength": 100
+        },
+        "message": {
+          "type": "string",
+          "description": "Comment text message",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "statusTag": {
+          "type": "string",
+          "description": "Optional status update tag",
+          "maxLength": 100
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Creator Firebase Auth UID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        }
+      },
+      "required": [
+        "id",
+        "perbaikanId",
+        "senderName",
+        "senderRole",
+        "message",
+        "ownerId",
+        "createdAt"
+      ]
+    },
+    "BeritaAcara": {
+      "title": "BeritaAcara",
+      "description": "Official medical equipment decommissioning/withdrawal report (BAP).",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique BAP document ID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "nomorBap": {
+          "type": "string",
+          "description": "Official BAP letter number",
+          "maxLength": 100
+        },
+        "tanggal": {
+          "type": "string",
+          "description": "BAP date YYYY-MM-DD",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "alkesId": {
+          "type": "string",
+          "description": "Linked Alkes ID or dash",
+          "maxLength": 128
+        },
+        "namaAlat": {
+          "type": "string",
+          "description": "Equipment name",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "merk": {
+          "type": "string",
+          "description": "Equipment brand",
+          "maxLength": 150
+        },
+        "modelType": {
+          "type": "string",
+          "description": "Equipment model",
+          "maxLength": 150
+        },
+        "serialNumber": {
+          "type": "string",
+          "description": "Serial number",
+          "maxLength": 150
+        },
+        "tahunPengadaan": {
+          "type": "string",
+          "description": "Procurement year",
+          "maxLength": 32
+        },
+        "ruangan": {
+          "type": "string",
+          "description": "Origin room",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "kondisiTerakhir": {
+          "type": "string",
+          "description": "Last recorded condition",
+          "enum": ["Baik", "Rusak Ringan", "Rusak Sedang", "Rusak Berat"]
+        },
+        "alasanPenarikan": {
+          "type": "string",
+          "description": "Reason for withdrawal",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "analisaTeknis": {
+          "type": "string",
+          "description": "Technical & K3RS analysis",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "rekomendasiTindakan": {
+          "type": "string",
+          "description": "Recommended follow-up action",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "namaTeknisi": {
+          "type": "string",
+          "description": "Biomedical technician name",
+          "minLength": 1,
+          "maxLength": 150
+        },
+        "nipTeknisi": {
+          "type": "string",
+          "description": "Technician NIP",
+          "maxLength": 64
+        },
+        "namaKepalaRuangan": {
+          "type": "string",
+          "description": "Room head name",
+          "minLength": 1,
+          "maxLength": 150
+        },
+        "nipKepalaRuangan": {
+          "type": "string",
+          "description": "Room head NIP",
+          "maxLength": 64
+        },
+        "namaKepalaIpsrs": {
+          "type": "string",
+          "description": "IPSRS head name",
+          "maxLength": 150
+        },
+        "nipKepalaIpsrs": {
+          "type": "string",
+          "description": "IPSRS head NIP",
+          "maxLength": 64
+        },
+        "namaDirektur": {
+          "type": "string",
+          "description": "Director name",
+          "maxLength": 150
+        },
+        "nipDirektur": {
+          "type": "string",
+          "description": "Director NIP",
+          "maxLength": 64
+        },
+        "ttdTeknisi": {
+          "type": "string",
+          "description": "Technician signature data URI",
+          "maxLength": 250000
+        },
+        "ttdKepalaRuangan": {
+          "type": "string",
+          "description": "Room head signature data URI",
+          "maxLength": 250000
+        },
+        "ttdKepalaIpsrs": {
+          "type": "string",
+          "description": "IPSRS head signature data URI",
+          "maxLength": 250000
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Creator Firebase Auth UID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp"
+        }
+      },
+      "required": [
+        "id",
+        "tanggal",
+        "namaAlat",
+        "ruangan",
+        "kondisiTerakhir",
+        "alasanPenarikan",
+        "analisaTeknis",
+        "rekomendasiTindakan",
+        "namaTeknisi",
+        "namaKepalaRuangan",
+        "ownerId",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Ruangan": {
+      "title": "Ruangan",
+      "description": "Master hospital room entry.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Normalized room ID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "nama": {
+          "type": "string",
+          "description": "Hospital room name",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Creator Firebase Auth UID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp"
+        }
+      },
+      "required": ["id", "nama", "ownerId", "createdAt", "updatedAt"]
+    },
+    "SystemConfig": {
+      "title": "SystemConfig",
+      "description": "Hospital integration configuration settings.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Config document ID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "googleSheetsWebhookUrl": {
+          "type": "string",
+          "description": "Apps Script webhook URL",
+          "maxLength": 500
+        },
+        "designatedEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "Target notification email",
+          "maxLength": 200
+        },
+        "autoSyncEnabled": {
+          "type": "boolean",
+          "description": "Enable automatic Google Sheets sync"
+        },
+        "lastSheetSyncTime": {
+          "type": "string",
+          "description": "ISO timestamp of last sheet sync",
+          "maxLength": 64
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Admin Firebase Auth UID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp"
+        }
+      },
+      "required": ["id", "designatedEmail", "autoSyncEnabled", "ownerId", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/User"
+      },
+      "description": "Private user profiles keyed by Firebase Auth UID."
+    },
+    "/admins/{userId}": {
+      "schema": {
+        "$ref": "#/entities/Admin"
+      },
+      "description": "Administrator registry keyed by Firebase Auth UID."
+    },
+    "/alkes/{alkesId}": {
+      "schema": {
+        "$ref": "#/entities/Alkes"
+      },
+      "description": "Hospital medical equipment inventory records."
+    },
+    "/pemeliharaan/{pemeliharaanId}": {
+      "schema": {
+        "$ref": "#/entities/Pemeliharaan"
+      },
+      "description": "Preventive maintenance (PPM) inspection records."
+    },
+    "/perbaikan/{perbaikanId}": {
+      "schema": {
+        "$ref": "#/entities/Perbaikan"
+      },
+      "description": "Corrective repair work orders (SPK) and damage reports."
+    },
+    "/perbaikan/{perbaikanId}/comments/{commentId}": {
+      "schema": {
+        "$ref": "#/entities/PerbaikanComment"
+      },
+      "description": "Discussion thread comments attached to a repair work order."
+    },
+    "/beritaAcara/{bapId}": {
+      "schema": {
+        "$ref": "#/entities/BeritaAcara"
+      },
+      "description": "Official medical equipment withdrawal reports (BAP)."
+    },
+    "/ruangan/{ruanganId}": {
+      "schema": {
+        "$ref": "#/entities/Ruangan"
+      },
+      "description": "Master list of hospital rooms and units."
+    },
+    "/systemConfig/{configId}": {
+      "schema": {
+        "$ref": "#/entities/SystemConfig"
+      },
+      "description": "System integration settings for Google Sheets and email alerts."
+    }
+  }
+}
